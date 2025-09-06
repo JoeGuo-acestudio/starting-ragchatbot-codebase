@@ -1,10 +1,11 @@
 """Test fixtures and configuration for the test suite"""
 
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock, MagicMock, AsyncMock
 from typing import List, Dict, Any
 import tempfile
 import os
+from fastapi.testclient import TestClient
 
 from vector_store import SearchResults, VectorStore
 from search_tools import CourseSearchTool, CourseOutlineTool, ToolManager
@@ -276,6 +277,122 @@ def anthropic_single_round_response():
     final_response.content = [final_text_block]
     
     return [tool_response, final_response]
+
+
+# API Testing fixtures
+@pytest.fixture
+def mock_rag_system():
+    """Create a mock RAG system for API testing"""
+    mock_rag = Mock(spec=RAGSystem)
+    mock_rag.query.return_value = ("Test response", ["Source 1", "Source 2"])
+    mock_rag.get_course_analytics.return_value = {
+        "total_courses": 5,
+        "course_titles": ["Course A", "Course B", "Course C", "Course D", "Course E"]
+    }
+    mock_rag.session_manager.create_session.return_value = "test-session-123"
+    return mock_rag
+
+
+@pytest.fixture
+def test_app():
+    """Create a test FastAPI application with minimal setup"""
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+    from pydantic import BaseModel
+    from typing import List, Optional
+    
+    # Create test app without static file mounting
+    app = FastAPI(title="Test RAG System")
+    
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    
+    # Pydantic models for API
+    class QueryRequest(BaseModel):
+        query: str
+        session_id: Optional[str] = None
+
+    class QueryResponse(BaseModel):
+        answer: str
+        sources: List[str]
+        session_id: str
+
+    class CourseStats(BaseModel):
+        total_courses: int
+        course_titles: List[str]
+    
+    # Mock RAG system for testing
+    from unittest.mock import Mock
+    mock_rag_system = Mock()
+    mock_rag_system.query.return_value = ("Test response", ["Source 1"])
+    mock_rag_system.get_course_analytics.return_value = {
+        "total_courses": 3,
+        "course_titles": ["Test Course 1", "Test Course 2", "Test Course 3"]
+    }
+    mock_rag_system.session_manager.create_session.return_value = "test-session-id"
+    
+    # API endpoints
+    @app.post("/api/query", response_model=QueryResponse)
+    async def query_documents(request: QueryRequest):
+        session_id = request.session_id
+        if not session_id:
+            session_id = mock_rag_system.session_manager.create_session()
+        
+        answer, sources = mock_rag_system.query(request.query, session_id)
+        return QueryResponse(
+            answer=answer,
+            sources=sources,
+            session_id=session_id
+        )
+
+    @app.get("/api/courses", response_model=CourseStats)
+    async def get_course_stats():
+        analytics = mock_rag_system.get_course_analytics()
+        return CourseStats(
+            total_courses=analytics["total_courses"],
+            course_titles=analytics["course_titles"]
+        )
+    
+    @app.get("/")
+    async def root():
+        return {"message": "RAG System API"}
+    
+    return app
+
+
+@pytest.fixture
+def client(test_app):
+    """Create a test client for the FastAPI app"""
+    return TestClient(test_app)
+
+
+
+
+@pytest.fixture
+def sample_query_request():
+    """Sample query request data"""
+    return {
+        "query": "What is machine learning?",
+        "session_id": "test-session-123"
+    }
+
+
+@pytest.fixture
+def sample_query_response():
+    """Sample query response data"""
+    return {
+        "answer": "Machine learning is a method of data analysis that automates analytical model building.",
+        "sources": [
+            "Course: AI Fundamentals, Lesson 1: Introduction to Machine Learning",
+            "Course: Data Science Basics, Lesson 3: ML Algorithms"
+        ],
+        "session_id": "test-session-123"
+    }
 
 
 # Utility functions for tests
