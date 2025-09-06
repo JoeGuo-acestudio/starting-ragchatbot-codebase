@@ -245,6 +245,33 @@ header h1 {
     color: var(--text-secondary);
 }
 
+/* Source links styling */
+.sources-content a {
+    color: #60a5fa;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s ease;
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    display: inline-block;
+    margin: 0.125rem;
+    background-color: rgba(96, 165, 250, 0.1);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.sources-content a:hover {
+    color: #93c5fd;
+    background-color: rgba(96, 165, 250, 0.2);
+    border-color: rgba(96, 165, 250, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(96, 165, 250, 0.2);
+}
+
+.sources-content a:active {
+    transform: translateY(0);
+    background-color: rgba(96, 165, 250, 0.15);
+}
+
 /* Markdown formatting styles */
 .message-content h1,
 .message-content h2,
@@ -599,6 +626,31 @@ details[open] .suggested-header::before {
     color: var(--text-secondary);
     font-style: italic;
     text-transform: none;
+}
+
+/* New Chat Button */
+.new-chat-button {
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    color: var(--text-secondary) !important;
+    cursor: pointer !important;
+    padding: 0.5rem 0 !important;
+    border: none !important;
+    background: none !important;
+    text-align: left !important;
+    width: 100% !important;
+    transition: color 0.2s ease !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+.new-chat-button:focus {
+    outline: none !important;
+    color: var(--primary-color) !important;
+}
+
+.new-chat-button:hover {
+    color: var(--primary-color) !important;
 }
 
 /* Suggested Questions in Sidebar */
