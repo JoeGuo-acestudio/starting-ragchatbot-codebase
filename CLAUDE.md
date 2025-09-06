@@ -20,6 +20,23 @@ uv sync
 - Copy `.env.example` to `.env` 
 - Set `ANTHROPIC_API_KEY=your_key_here`
 
+**Code Quality & Formatting:**
+```bash
+# Run all quality checks (format, lint)
+./scripts/quality.sh
+
+# Format code only
+./scripts/format.sh
+
+# Lint code only
+./scripts/lint.sh
+
+# Manual commands:
+uv run black backend/ main.py              # Format with black
+uv run isort backend/ main.py               # Sort imports
+uv run flake8 backend/ main.py --max-line-length=88 --extend-ignore=E203,W503  # Lint
+```
+
 ## Architecture Overview
 
 This is a **Retrieval-Augmented Generation (RAG) system** for querying course materials using semantic search and AI responses.
